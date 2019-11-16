@@ -9,61 +9,45 @@
 #define NUM_LEDS 150
 
 CRGB leds[NUM_LEDS];
-File myFile;
-//String frames_files=
-//void 
+File frame;
 
 void read_files(){
-  int current_led_in_the_face=0;
-  myFile = SD.open("colors");
-  if (myFile) {
-    while(true){
-      FastLED.clear();
-      File frame = myFile.openNextFile();
-      if(! frame) return;
-      int current_led=0;
-      int current_led_in_the_row=0;
-      
-      char current_color[10] = "";
-      char i=0;
-      while (frame.available()) {
-        char chr = frame.read();
-        current_color[i] = chr;
-        if(chr == '\n'){
-          if(current_led_in_the_face == 30){
-            current_led_in_the_face=99;
-            frame.close();
-            break;
-            }
-          if(current_led_in_the_row==3){
-            current_led_in_the_row= 0;
-            current_led += 9;
-            }
-
-          leds[current_led] = atoi(current_color);
-          current_led++;
-          current_led_in_the_row++;
-          current_led_in_the_face++;
-          i=0;
-          for(int x=0; x<10; x++){
-            current_color[i]=0;
-          }
-          continue;
-          }
-          i++;
-        }
-        frame.close();
-
-        if(current_led_in_the_face==99){
-          current_led_in_the_face=0;
-          continue;
-          }
-        FastLED.show();
-
-      }
-      myFile.close();
-    }
+  frame = SD.open("colors/all.txt");
+  if (frame) {
+    int color_value_position=0;
+    String current_color = "";
+    bool skip_next=false;
+    int current_led=0;
+    int current_led_in_the_row=0;
     
+    while (frame.available()){
+      char color_value=frame.read();
+     
+      if(color_value == '\n'){
+        if(skip_next){skip_next= false; continue;}
+        
+        if(current_led_in_the_row==3){
+          current_led_in_the_row= 0;
+          current_led += 9;
+        }
+
+        leds[current_led] = current_color.toInt();
+        current_led++;
+        current_led_in_the_row++;
+        current_color="";
+        }else if(color_value == '_'){
+          color_value_position=0;
+          current_color="";
+          current_led_in_the_row= 0;
+          current_led = 0;
+          skip_next=true;
+          FastLED.show();
+        }else{
+          current_color += color_value;
+        }
+    } //frame.available()
+  } // frame
+  frame.close();
 }
 
 void setup() {
@@ -72,7 +56,7 @@ void setup() {
   SD.begin();
   Serial.begin(115200);
 
-  
+//  read_files();
   
 }
 
