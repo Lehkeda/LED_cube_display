@@ -11,13 +11,33 @@
 CRGB leds[NUM_LEDS];
 File frame;
 
+void set_face_one(long int color, int row, int col){
+  leds[((row*12)+col)]=color;
+}
+void set_face_two(long int color, int row, int col){
+  leds[((row*12)+3+col)]=color;
+}
+void set_face_three(long int color, int row, int col){
+  leds[((row*12)+6+col)]=color;
+}
+void set_face_four(long int color, int row, int col){
+  leds[((row*12)+9+col)]=color;
+}
+
+void set_faces_colors(long int color, int row, int col){
+  set_face_one(color, row, col);
+  set_face_two(color, row, col);
+  set_face_three(color, row, col);
+  set_face_four(color, row, col);
+}
+
 void read_files(){
-  frame = SD.open("colors/all.txt");
+  frame = SD.open("display/new.txt");
   if (frame) {
     int color_value_position=0;
     String current_color = "";
     bool skip_next=false;
-    int current_led=0;
+    int current_row=0;
     int current_led_in_the_row=0;
     
     while (frame.available()){
@@ -28,20 +48,24 @@ void read_files(){
         
         if(current_led_in_the_row==3){
           current_led_in_the_row= 0;
-          current_led += 9;
+          current_row++;
         }
-
-        leds[current_led] = current_color.toInt();
-        current_led++;
+        
+//        leds[current_led] = current_color.toInt();
+        set_faces_colors(current_color.toInt(), current_row, current_led_in_the_row);
+//        current_led++;
         current_led_in_the_row++;
         current_color="";
         }else if(color_value == '_'){
           color_value_position=0;
           current_color="";
           current_led_in_the_row= 0;
-          current_led = 0;
+          current_row = 0;
           skip_next=true;
           FastLED.show();
+          delay(5);
+          FastLED.clear();
+          delay(5);
         }else{
           current_color += color_value;
         }
